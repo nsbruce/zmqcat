@@ -10,6 +10,8 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+var version = "dev" // will be set by GoReleaser on build
+
 func main() {
 	var verbose bool
 	var host string
@@ -17,6 +19,7 @@ func main() {
 		Name:      "zmqcat",
 		Usage:     "inspect published ZeroMQ messages",
 		ArgsUsage: "<protocol>://<host>:<port>",
+		Version:   version,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "verbose",
