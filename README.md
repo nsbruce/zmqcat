@@ -18,6 +18,8 @@ Then, install `zmqcat` using one of the following methods.
 go install github.com/nsbruce/zmqcat@latest
 ```
 
+**Note**: If installing from source, the `--version` flag will not be available. To get version information, you must install from pre-built binaries.
+
 ### From pre-built binaries
 
 Pre-built binaries are available on the [releases page](https://github.com/nsbruce/zmqcat/releases).
