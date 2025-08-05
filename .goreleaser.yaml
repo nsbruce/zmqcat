@@ -13,7 +13,6 @@ builds:
       - linux
     goarch:
       - amd64
-      - "386"
 
 archives:
   - formats: [tar.gz]
