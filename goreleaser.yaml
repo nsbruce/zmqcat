@@ -3,7 +3,7 @@ project_name: zmqcat
 builds:
   - main: ./zmqcat.go
     ldflags:
-      - "-s -w -X main.version={{.Version}}"
+      - "-s -w -X zmqcat.version={{.Version}}"
     goos:
       - linux
       - darwin
