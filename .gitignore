@@ -33,3 +33,4 @@ go.work.sum
 zmqcat
 # Added by goreleaser init:
 dist/
+.devcontainer
