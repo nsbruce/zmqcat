@@ -1,19 +1,52 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/pebbe/zmq4"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: zmqcat <protocol://ip:port>")
-		os.Exit(1)
+	var verbose bool
+	var host string
+	cmd := &cli.Command{
+		Name:      "zmqcat",
+		Usage:     "inspect published ZeroMQ messages",
+		ArgsUsage: "<protocol>://<host>:<port>",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:        "verbose",
+				Value:       false,
+				Usage:       "Print message and metadata contents",
+				Destination: &verbose,
+			},
+		},
+		Arguments: []cli.Argument{
+			&cli.StringArg{
+				Name:        "host",
+				UsageText:   "The ZeroMQ host to connect to, in the format <protocol>://<host>:<port>",
+				Destination: &host,
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if host == "" {
+				cli.ShowAppHelp(cmd)
+				return fmt.Errorf("missing required argument")
+			}
+			process_connection(host, verbose)
+			return nil
+		},
 	}
-	host := os.Args[1]
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func process_connection(host string, verbose bool) {
 
 	context, err := zmq4.NewContext()
 	if err != nil {
@@ -40,11 +73,26 @@ func main() {
 	fmt.Println("Waiting for messages")
 
 	for {
-		msg, meta, err := subscriber.RecvBytesWithMetadata(0)
+		// msg, meta, err := subscriber.RecvMessageWithMetadata(0) // 0 means default options
+		msg, meta, err := subscriber.RecvBytesWithMetadata(0) // 0 means default options
 		if err != nil {
 			log.Printf("Failed to receive message: %v", err)
 			continue
 		}
-		log.Println("Received message: length", len(msg), "bytes,", "metadata:", meta)
+		if verbose {
+			if len(msg) > 1024 {
+				log.Println("Received message of length", len(msg), "bytes (too long to print).")
+			} else {
+				log.Println("Received message:", string(msg))
+			}
+		} else {
+			log.Println("Received message of length", len(msg), "bytes.")
+		}
+		if verbose && len(meta) > 0 {
+			fmt.Println("Metadata:")
+			for key, value := range meta {
+				fmt.Println("   ", key, "=", value)
+			}
+		}
 	}
 }
