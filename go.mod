@@ -1,4 +1,4 @@
-module zmqcat
+module github.com/nsbruce/zmqcat
 
 go 1.24.5
 
