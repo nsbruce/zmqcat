@@ -15,6 +15,7 @@ var version = "dev" // will be set by GoReleaser on build
 func main() {
 	var verbose bool
 	var host string
+	var max_messages int
 	cmd := &cli.Command{
 		Name:      "zmqcat",
 		Usage:     "inspect published ZeroMQ messages",
@@ -26,6 +27,12 @@ func main() {
 				Value:       false,
 				Usage:       "Print message and metadata contents",
 				Destination: &verbose,
+			},
+			&cli.IntFlag{
+				Name:        "max_messages",
+				Value:       0,
+				Usage:       "Maximum number of messages to receive before exiting (0 means unlimited)",
+				Destination: &max_messages,
 			},
 		},
 		Arguments: []cli.Argument{
@@ -40,7 +47,7 @@ func main() {
 				cli.ShowAppHelp(cmd)
 				return fmt.Errorf("missing required argument")
 			}
-			process_connection(host, verbose)
+			process_connection(host, verbose, max_messages)
 			return nil
 		},
 	}
@@ -49,7 +56,7 @@ func main() {
 	}
 }
 
-func process_connection(host string, verbose bool) {
+func process_connection(host string, verbose bool, max_messages int) {
 
 	context, err := zmq4.NewContext()
 	if err != nil {
@@ -75,8 +82,8 @@ func process_connection(host string, verbose bool) {
 
 	fmt.Println("Waiting for messages")
 
+	var message_count int = 0
 	for {
-		// msg, meta, err := subscriber.RecvMessageWithMetadata(0) // 0 means default options
 		msg, meta, err := subscriber.RecvBytesWithMetadata(0) // 0 means default options
 		if err != nil {
 			log.Printf("Failed to receive message: %v", err)
@@ -96,6 +103,11 @@ func process_connection(host string, verbose bool) {
 			for key, value := range meta {
 				fmt.Println("   ", key, "=", value)
 			}
+		}
+		message_count++
+		if max_messages > 0 && message_count >= max_messages {
+			log.Printf("Reached maximum message count of %d, exiting.", max_messages)
+			break
 		}
 	}
 }
